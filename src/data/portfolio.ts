@@ -94,7 +94,10 @@ export const projects: Project[] = [
       "Sincronización extremo a extremo y backup cifrado.",
     ],
     tags: ["WebCrypto", "WebAuthn", "Cloudflare Workers", "D1"],
-    links: [{ href: "https://ggonzalospineli-ops.github.io/otra-escena/", label: "Ver app" }],
+    links: [
+      { href: "https://ggonzalospineli-ops.github.io/otra-escena/", label: "Ver app" },
+      { href: "https://github.com/ggonzalospineli-ops/otra-escena", label: "Código" },
+    ],
   },
   {
     visual: "catalog",
@@ -108,17 +111,28 @@ export const projects: Project[] = [
       "Precios regulares y promocionales, con control de stock.",
     ],
     tags: ["Ecommerce", "Catálogo", "Stock"],
-    links: [{ href: "https://ggonzalospineli-ops.github.io/bolsa-mayor/", label: "Ver tienda" }],
+    links: [
+      { href: "https://ggonzalospineli-ops.github.io/bolsa-mayor/", label: "Ver tienda" },
+      { href: "https://github.com/ggonzalospineli-ops/bolsa-mayor", label: "Código" },
+    ],
   },
   {
     visual: "checkout",
     name: "Khorven",
-    headline: "TODO: frase de Khorven.",
+    headline: "Catálogo multilingüe, carrito y checkout integrado.",
     discipline: "Ecommerce · En colaboración",
-    status: "TODO",
-    desc: "TODO: Tienda online con catálogo, carrito y checkout.",
-    tags: ["TODO"],
-    links: [], // TODO: link a la tienda
+    status: "En desarrollo",
+    desc: "Tienda online de streetwear: catálogo multi-idioma con temas dinámicos por categoría, carrito lateral reactivo y checkout conectado a Mercado Pago en sandbox y Cloudflare D1.",
+    highlights: [
+      "Catálogo en tres idiomas (ES/PT/EN) resuelto del lado del servidor.",
+      "Checkout con tokenización en el navegador y cobros de prueba en sandbox.",
+      "Base de datos de pedidos y catálogo sobre Cloudflare D1 y almacenamiento R2.",
+    ],
+    tags: ["Next.js", "React", "TypeScript", "Mercado Pago", "Cloudflare D1"],
+    links: [
+      { href: "https://khorven.com", label: "Ver tienda" },
+      { href: "https://github.com/ggonzalospineli-ops/khorven", label: "Código" },
+    ],
   },
   {
     visual: "dashboard",
@@ -136,10 +150,13 @@ export const projects: Project[] = [
     headline: "Un timbre sin cables. Suena en tu teléfono.",
     discipline: "IoT · PWA",
     status: "Funcionando",
-    desc: "TODO: El visitante escanea un QR en la puerta y el aviso llega al teléfono al instante. Una webapp muestra quién tocó y el historial de visitas.",
-    highlights: ["TODO: cómo viaja el aviso del QR al teléfono (push, WebSocket, etc.)."],
-    tags: ["PWA", "Notificaciones push"],
-    links: [],
+    desc: "El visitante escanea un QR en la puerta y el aviso llega al teléfono al instante. Una webapp muestra quién tocó y el historial de visitas.",
+    highlights: ["Notificaciones inmediatas vía Web Push y WebSockets."],
+    tags: ["PWA", "Notificaciones push", "WebRTC"],
+    links: [
+      { href: "https://ggonzalospineli-ops.github.io/timbre/", label: "Ver app" },
+      { href: "https://github.com/ggonzalospineli-ops/timbre", label: "Código" },
+    ],
   },
   {
     visual: "recommender",
@@ -154,7 +171,10 @@ export const projects: Project[] = [
       "Tests que crecen con cada caso límite.",
     ],
     tags: ["Python", "Datos", "API", "Tests"],
-    links: [],
+    links: [
+      { href: "https://ggonzalospineli-ops.github.io/rico-y-barato/", label: "Ver app" },
+      { href: "https://github.com/ggonzalospineli-ops/rico-y-barato", label: "Código" },
+    ],
   },
 ];
 
