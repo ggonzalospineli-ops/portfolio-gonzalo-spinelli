@@ -10,7 +10,7 @@ export const site = {
 };
 
 // cada visual es un componente en src/components/visuals/ que se anima con el scroll (--p y data-step)
-export type Visual = "model3d" | "kernel" | "cipher" | "catalog" | "checkout" | "dashboard" | "doorbell" | "recommender" | "argos";
+export type Visual = "model3d" | "kernel" | "cipher" | "catalog" | "checkout" | "dashboard" | "doorbell" | "recommender" | "argos" | "redesign";
 export type ProjectLink = { href: string; label: string };
 export type Project = {
   visual: Visual;
@@ -117,6 +117,24 @@ export const projects: Project[] = [
     links: [
       { href: "https://ggonzalospineli-ops.github.io/bolsa-mayor/", label: "Ver tienda" },
       { href: "https://github.com/ggonzalospineli-ops/bolsa-mayor", label: "Código" },
+    ],
+  },
+  {
+    visual: "redesign",
+    name: "Rediseño de páginas",
+    headline: "Agarro el sitio de un negocio real y lo rehago de cero.",
+    discipline: "Rediseño web · Front-end",
+    status: "Prototipo en vivo",
+    desc: "Rediseño completo de la web de Grupo Modo, una distribuidora de consumo masivo: nueva estructura, identidad y secciones (cobertura con mapa, proceso y contacto), hecho como demo para presentarle al dueño. Prototipo público, marcado como no oficial.",
+    highlights: [
+      "Sitio estático liviano, responsive y sin dependencias pesadas.",
+      "Mapa de cobertura de CABA y GBA Sur generado a partir de datos.",
+      "Secciones nuevas: proceso por etapas, aliados, cobertura y contacto.",
+    ],
+    tags: ["HTML", "CSS", "JavaScript", "Diseño UI", "Responsive"],
+    links: [
+      { href: "https://ggonzalospineli-ops.github.io/grupo-modo-prototipo/", label: "Ver prototipo" },
+      { href: "https://github.com/ggonzalospineli-ops/grupo-modo-prototipo", label: "Código" },
     ],
   },
   {

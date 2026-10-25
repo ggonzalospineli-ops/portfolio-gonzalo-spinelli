@@ -1,0 +1,119 @@
+---
+// Redesign.astro — una ventana de navegador que, al scrollear, hace un "wipe" del sitio
+// viejo (ANTES) al rediseño (DESPUÉS). Guiado por --p, sin JS.
+---
+
+<div class="rd" aria-hidden="true">
+  <div class="browser">
+    <div class="bar">
+      <i></i><i></i><i></i>
+      <span class="url">grupomodo.ar</span>
+    </div>
+    <div class="screen">
+      <!-- ANTES: sitio apretado, dateado -->
+      <div class="before">
+        <div class="old-head">GRUPO MODO distribuidora</div>
+        <div class="old-links">Inicio · Empresa · Productos · Mapa · Contacto</div>
+        <p class="old-title">Bienvenidos a nuestro sitio web</p>
+        <div class="old-grid">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <p class="old-foot">© 2014 · Todos los derechos reservados · Hecho con FrontPage</p>
+      </div>
+
+      <!-- DESPUÉS: rediseño limpio (se revela con el scroll) -->
+      <div class="after">
+        <div class="nav"><b>Grupo Modo</b><span>Nosotros · Cobertura · Contacto</span></div>
+        <p class="ey">DISTRIBUCIÓN · CABA + GBA SUR</p>
+        <h4>Hacemos que tu producto llegue.</h4>
+        <div class="cta">Quiero distribuir →</div>
+        <dl class="stats">
+          <div><b>15.000+</b><span>puntos de venta</span></div>
+          <div><b>40.000</b><span>pedidos / mes</span></div>
+          <div><b>200</b><span>colaboradores</span></div>
+        </dl>
+      </div>
+
+      <div class="divider"></div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <span class="old">ANTES</span>
+    <span class="arrow">→</span>
+    <span class="new">DESPUÉS</span>
+  </div>
+</div>
+
+<style>
+  .rd {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 1em;
+    padding: 1.6em;
+    background: radial-gradient(90% 90% at 50% 0%, #fafafa, #eef0f3);
+  }
+
+  .browser {
+    border-radius: 0.7em;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1.6em 3.5em #0000001f, 0 0 0 1px #00000010;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-height: 0;
+  }
+  .bar { display: flex; align-items: center; gap: 0.45em; padding: 0.6em 0.8em; background: #e9eaed; border-bottom: 1px solid #00000010; }
+  .bar i { width: 0.62em; height: 0.62em; border-radius: 50%; background: #c6c8cc; }
+  .bar i:first-child { background: #ff5f57; }
+  .bar i:nth-child(2) { background: #febc2e; }
+  .bar i:nth-child(3) { background: #28c840; }
+  .url { margin-left: 0.6em; padding: 0.22em 0.9em; border-radius: 999px; background: #fff; font: 0.6em/1 var(--font-mono); color: #8a8d92; }
+
+  .screen { position: relative; overflow: hidden; }
+  .before, .after { position: absolute; inset: 0; padding: 1.3em 1.5em; }
+
+  /* ANTES */
+  .before { background: #eef1f5; color: #2a2f3a; font-family: "Times New Roman", Georgia, serif; }
+  .old-head { font-weight: 700; font-size: 0.95em; color: #1b3a6b; letter-spacing: -0.01em; }
+  .old-links { margin-top: 0.3em; font-size: 0.62em; color: #2d5fa8; text-decoration: underline; }
+  .old-title { margin: 1.1em 0 0.9em; font-size: 1.15em; font-style: italic; color: #7a1f1f; }
+  .old-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5em; }
+  .old-grid span { height: 2.4em; background: repeating-linear-gradient(45deg, #d8dde4, #d8dde4 4px, #cfd5dd 4px, #cfd5dd 8px); border: 1px solid #b9c0ca; }
+  .old-foot { position: absolute; left: 1.5em; bottom: 1.1em; font-size: 0.52em; color: #9aa0a8; }
+
+  /* DESPUÉS */
+  .after { background: #ffffff; color: #0a0a0a; font-family: var(--font-sans); display: flex; flex-direction: column; }
+  .nav { display: flex; align-items: center; justify-content: space-between; font-size: 0.6em; color: #6e6e73; }
+  .nav b { font-size: 1.15em; color: #0a0a0a; letter-spacing: -0.03em; }
+  .ey { margin: 1.4em 0 0.5em; font: 0.55em/1 var(--font-mono); letter-spacing: 0.12em; color: #ff4f17; }
+  .after h4 { margin: 0; font-size: 1.7em; font-weight: 650; line-height: 0.98; letter-spacing: -0.04em; max-width: 9em; }
+  .cta { align-self: flex-start; margin-top: 1.1em; padding: 0.55em 1.1em; border-radius: 999px; background: #0a0a0a; color: #fff; font: 600 0.6em/1 var(--font-sans); }
+  .stats { display: flex; gap: 1.6em; margin: auto 0 0; padding-top: 1em; border-top: 1px solid #ececef; }
+  .stats div { display: grid; gap: 0.25em; }
+  .stats b { font-size: 1em; font-weight: 650; letter-spacing: -0.02em; }
+  .stats span { font: 0.5em/1.2 var(--font-mono); color: #8a8d92; }
+
+  /* el rediseño se revela de izquierda a derecha con el scroll */
+  .after { clip-path: inset(0 calc((1 - var(--p)) * 100%) 0 0); }
+  /* visible mientras el wipe está en curso; se desvanece al llegar al final */
+  .divider { position: absolute; top: 0; bottom: 0; left: clamp(0%, calc(var(--p) * 100%), 100%); width: 2px; background: #ff4f17; box-shadow: 0 0 1.2em #ff4f1788; opacity: calc(clamp(0, var(--p) * 10, 1) * (1 - clamp(0, (var(--p) - 0.92) * 12, 1))); }
+  .divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1.5em;
+    height: 1.5em;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: #ff4f17;
+    box-shadow: 0 0 0 0.25em #ff4f1733;
+  }
+  .caption { display: flex; align-items: center; justify-content: center; gap: 0.8em; font: 600 0.62em/1 var(--font-mono); letter-spacing: 0.1em; }
+  .caption .old { color: #a1a1a6; }
+  .caption .arrow { color: #c6c8cc; }
+  .caption .new { color: #ff4f17; }
+</style>
