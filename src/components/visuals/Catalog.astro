@@ -51,10 +51,19 @@ const money = new Intl.NumberFormat("es-AR", {
   currency: "ARS",
   maximumFractionDigits: 0,
 });
+
+// 108 celdas visuales, pero sólo seis archivos de imagen que el navegador cachea.
+const mosaic = Array.from({ length: 108 }, (_, index) => products[(index * 5 + Math.floor(index / 12)) % products.length]);
 ---
 
 <div class="cat" data-catalog>
-  <div class="tiles"></div>
+  <div class="tiles" aria-hidden="true">
+    {mosaic.map((product, index) => (
+      <span class="tile" style={`--tile:${index % 6}`}>
+        <img src={product.image} alt="" loading="eager" decoding="async" />
+      </span>
+    ))}
+  </div>
   <div class="count"><b>1.402</b> productos activos</div>
 
   <div class="product-stage">
@@ -127,18 +136,22 @@ const money = new Intl.NumberFormat("es-AR", {
 
 <style>
   .cat { position: absolute; inset: 0; overflow: hidden; background: #fff; color: #0a0a0a; }
-  /* 40 × 35 = 1.400 celdas dibujadas con gradientes, sin 1.400 nodos. */
+  /* El catálogo completo se representa con un mosaico liviano de seis imágenes cacheadas. */
   .tiles {
     position: absolute;
     inset: 0;
-    background:
-      linear-gradient(90deg, #fff 1.5px, transparent 1.5px) 0 0 / calc(100% / 40) 100%,
-      linear-gradient(#fff 1.5px, transparent 1.5px) 0 0 / 100% calc(100% / 35),
-      linear-gradient(135deg, #e8e8ed, #d2d2d7);
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-rows: repeat(9, minmax(0, 1fr));
+    gap: 2px;
+    padding: 2px;
+    background: #fff;
     transform-origin: 56% 47%;
     transform: scale(calc(1 + pow(clamp(0, var(--p) * 1.6, 1), 3) * 40));
     opacity: calc(1 - clamp(0, (var(--p) - 0.48) * 7, 1));
   }
+  .tile { min-width: 0; min-height: 0; overflow: hidden; background: hsl(240 8% calc(95% - var(--tile) * 0.7%)); }
+  .tile img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; transform: scale(0.9); filter: saturate(0.82) contrast(0.96); opacity: 0.9; }
   .count { position: absolute; left: 1.4em; top: 1.2em; z-index: 2; padding: 0.5em 0.9em; border-radius: 99px; background: #0a0a0a; color: #fff; font-size: 0.75em; opacity: calc(1 - clamp(0, (var(--p) - 0.25) * 8, 1)); }
   .count b { font-weight: 650; }
 
