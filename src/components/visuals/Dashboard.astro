@@ -10,24 +10,73 @@ const line = pts.map((y, i) => `${i === 0 ? "M" : "L"}${(i * 100) / (pts.length 
 const bars = [40, 65, 52, 80, 58, 92, 74];
 ---
 
-<div class="db">
+<div class="db" data-dashboard>
   <div class="kpis">
-    {kpis.map((k, i) => <div class="kpi" style={`--a:${i * 0.06}`}><span>{k.l}</span><b>{k.v}</b><em>{k.d}</em></div>)}
+    {kpis.map((k, i) => <div class="kpi" style={`--a:${i * 0.06}`}><span>{k.l}</span><b data-kpi-value>{k.v}</b><em data-kpi-delta>{k.d}</em></div>)}
   </div>
   <div class="charts">
     <div class="panel">
       <span class="lab">Ingresos · 30 días</span>
       <svg viewBox="0 0 100 80" preserveAspectRatio="none">
-        <path class="area" d={`${line} L100 80 L0 80 Z`} />
-        <path class="stroke" d={line} pathLength="1" />
+        <path class="area" data-chart-area d={`${line} L100 80 L0 80 Z`} />
+        <path class="stroke" data-chart-line d={line} pathLength="1" />
       </svg>
     </div>
     <div class="panel bars">
       <span class="lab">Pedidos</span>
-      <div class="cols">{bars.map((h, i) => <span style={`--h:${h}%;--a:${0.35 + i * 0.05}`} />)}</div>
+      <div class="cols">{bars.map((h, i) => <span data-chart-bar style={`--h:${h}%;--a:${0.35 + i * 0.05}`} />)}</div>
     </div>
   </div>
 </div>
+
+<script is:inline>
+  (() => {
+    const randomBetween = (min, max) => Math.random() * (max - min) + min;
+    const signed = (value, suffix = "%") => `${value >= 0 ? "+" : ""}${value.toFixed(value % 1 ? 1 : 0)}${suffix}`;
+
+    document.querySelectorAll("[data-dashboard]").forEach((dashboard) => {
+      if (dashboard.dataset.ready === "true") return;
+      dashboard.dataset.ready = "true";
+
+      const visits = Math.round(randomBetween(8400, 28900));
+      const conversion = randomBetween(1.8, 5.9);
+      const averageOrder = randomBetween(65, 145);
+      const revenue = visits * (conversion / 100) * averageOrder;
+      const visitDelta = randomBetween(-7, 28);
+      const conversionDelta = randomBetween(-0.5, 0.9);
+      const revenueDelta = visitDelta + randomBetween(-5, 12);
+      const values = [
+        visits >= 1000 ? `${(visits / 1000).toFixed(1)}k` : String(visits),
+        `${conversion.toFixed(1)}%`,
+        revenue >= 1000 ? `$${(revenue / 1000).toFixed(1)}k` : `$${Math.round(revenue)}`,
+      ];
+      const deltas = [signed(visitDelta), signed(conversionDelta, ""), signed(revenueDelta)];
+
+      dashboard.querySelectorAll("[data-kpi-value]").forEach((node, index) => node.textContent = values[index]);
+      dashboard.querySelectorAll("[data-kpi-delta]").forEach((node, index) => {
+        node.textContent = deltas[index];
+        node.classList.toggle("is-negative", Number.parseFloat(deltas[index]) < 0);
+      });
+
+      let level = randomBetween(58, 72);
+      const points = Array.from({ length: 10 }, (_, index) => {
+        level = Math.max(10, Math.min(74, level - randomBetween(2, 10) + (index % 3 === 2 ? randomBetween(3, 9) : 0)));
+        return level;
+      });
+      const path = points.map((y, index) => `${index === 0 ? "M" : "L"}${(index * 100) / (points.length - 1)} ${y.toFixed(1)}`).join(" ");
+      dashboard.querySelector("[data-chart-line]")?.setAttribute("d", path);
+      dashboard.querySelector("[data-chart-area]")?.setAttribute("d", `${path} L100 80 L0 80 Z`);
+
+      const barNodes = [...dashboard.querySelectorAll("[data-chart-bar]")];
+      const heights = barNodes.map(() => Math.round(randomBetween(28, 94)));
+      const highlight = Math.floor(Math.random() * heights.length);
+      barNodes.forEach((node, index) => {
+        node.style.setProperty("--h", `${heights[index]}%`);
+        node.classList.toggle("is-highlight", index === highlight);
+      });
+    });
+  })();
+</script>
 
 <style>
   .db { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 1em; padding: 1.6em; background: var(--color-soft); }
@@ -36,6 +85,7 @@ const bars = [40, 65, 52, 80, 58, 92, 74];
     opacity: clamp(0, (var(--p) - var(--a)) * 8, 1); transform: translateY(calc((1 - clamp(0, (var(--p) - var(--a)) * 8, 1)) * 1em)); }
   .kpi b { font-size: 1.7em; font-weight: 600; letter-spacing: -0.03em; color: var(--color-ink); }
   .kpi em { font-style: normal; color: #1f9d55; }
+  .kpi em.is-negative { color: #d43d27; }
   .charts { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.6fr 1fr; gap: 0.8em; }
   .panel { display: flex; flex-direction: column; gap: 0.6em; padding: 1em; border-radius: 0.8em; background: #fff; min-height: 0; }
   .lab { font: 0.58em var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-mute); }
@@ -44,5 +94,5 @@ const bars = [40, 65, 52, 80, 58, 92, 74];
   .area { fill: var(--color-signal); opacity: calc(clamp(0, (var(--p) - 0.7) * 5, 1) * 0.12); }
   .cols { flex: 1; display: flex; align-items: flex-end; gap: 8%; }
   .cols span { flex: 1; height: var(--h); border-radius: 0.2em 0.2em 0 0; background: var(--color-ink); transform-origin: bottom; transform: scaleY(clamp(0, (var(--p) - var(--a)) * 5, 1)); }
-  .cols span:nth-child(6) { background: var(--color-signal); }
+  .cols span.is-highlight { background: var(--color-signal); }
 </style>
