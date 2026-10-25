@@ -1,4 +1,6 @@
 ---
+import { bolsaMosaic } from "../../data/bolsaMosaic";
+
 // Muestra corta tomada del catálogo real de Bolsa Mayor. El orden se mezcla en
 // el navegador y el producto destacado cambia a medida que avanza el scroll del capítulo.
 const products = [
@@ -52,8 +54,7 @@ const money = new Intl.NumberFormat("es-AR", {
   maximumFractionDigits: 0,
 });
 
-// 108 celdas visuales, pero sólo seis archivos de imagen que el navegador cachea.
-const mosaic = Array.from({ length: 108 }, (_, index) => products[(index * 5 + Math.floor(index / 12)) % products.length]);
+const mosaic = bolsaMosaic;
 ---
 
 <div class="cat" data-catalog>
@@ -136,7 +137,7 @@ const mosaic = Array.from({ length: 108 }, (_, index) => products[(index * 5 + M
 
 <style>
   .cat { position: absolute; inset: 0; overflow: hidden; background: #fff; color: #0a0a0a; }
-  /* El catálogo completo se representa con un mosaico liviano de seis imágenes cacheadas. */
+  /* El catálogo completo se representa con 108 productos distintos. */
   .tiles {
     position: absolute;
     inset: 0;
