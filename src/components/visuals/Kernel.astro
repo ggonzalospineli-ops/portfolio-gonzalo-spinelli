@@ -1,6 +1,6 @@
 ---
-// Kernel.astro — el log de compilación avanza con el scroll, falla en TrustZone (glitch)
-// y se ilumina la cadena de arranque hasta llegar al root
+// Kernel.astro — bitácora del porte y una auditoría Wi-Fi defensiva que corre
+// íntegramente en el navegador. No intenta conectarse ni probar claves contra redes ajenas.
 const log: [string, string][] = [
   ["ok", "make ARCH=arm64 samsung_defconfig"],
   ["ok", "CC  drivers/net/wireless/ath9k_htc"],
@@ -11,11 +11,10 @@ const log: [string, string][] = [
   ["ok", "drivers built-in · sin módulos firmados"],
   ["ok", "kernel 4.14-nethunter · arrancó"],
 ];
-const chain = ["Bootloader", "Kernel", "TrustZone", "NetHunter"];
 ---
 
-<div class="kn">
-  <div class="term">
+<div class="kn" data-wifi-audit>
+  <div class="term" aria-hidden="true">
     <div class="bar"><i></i><i></i><i></i><span>build.log</span></div>
     {
       log.map(([k, t], i) => (
@@ -27,30 +26,189 @@ const chain = ["Bootloader", "Kernel", "TrustZone", "NetHunter"];
     <div class="ln root" style="--a:0.7">root@nethunter:~# <span class="cur">▍</span></div>
   </div>
 
-  <ol class="chain">
-    {
-      chain.map((c, i) => (
-        <li style={`--a:${0.55 + i * 0.08}`}>
-          <span class="dot" />
-          <span>{c}</span>
-        </li>
-      ))
-    }
-  </ol>
+  <section class="audit-card" aria-labelledby="wifi-audit-title">
+    <div class="audit-intro">
+      <span class="signal-dot" aria-hidden="true"></span>
+      <div>
+        <p class="eyebrow">DIAGNÓSTICO LOCAL</p>
+        <h4 id="wifi-audit-title">¿Tu Wi-Fi está bien protegido?</h4>
+      </div>
+    </div>
+    <p class="audit-copy">Chequeá contraseña, WPS y cifrado sin enviar datos.</p>
+    <button class="audit-trigger" type="button" aria-expanded="false">
+      Auditar mi Wi-Fi
+      <span aria-hidden="true">→</span>
+    </button>
+    <p class="privacy"><span aria-hidden="true">●</span> Sólo para tu red · funciona en este navegador</p>
+  </section>
+
+  <div class="audit-panel" hidden>
+    <form class="audit-form" autocomplete="off">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">AUDITORÍA DEFENSIVA</p>
+          <h4>Seguridad de tu red</h4>
+        </div>
+        <button class="close-audit" type="button" aria-label="Cerrar auditoría">×</button>
+      </div>
+
+      <label>
+        <span>Contraseña del Wi-Fi</span>
+        <span class="password-wrap">
+          <input name="password" type="password" minlength="1" placeholder="Se analiza sólo en tu dispositivo" required />
+          <button class="toggle-password" type="button" aria-label="Mostrar contraseña">Ver</button>
+        </span>
+      </label>
+
+      <div class="field-row">
+        <label>
+          <span>WPS</span>
+          <select name="wps" required>
+            <option value="unknown">No sé</option>
+            <option value="off">Desactivado</option>
+            <option value="pbc">Sólo botón físico</option>
+            <option value="pin">PIN habilitado</option>
+          </select>
+        </label>
+        <label>
+          <span>Cifrado</span>
+          <select name="cipher" required>
+            <option value="unknown">No sé</option>
+            <option value="wpa3">WPA3 / AES</option>
+            <option value="wpa2">WPA2 / AES</option>
+            <option value="mixed">WPA/WPA2 mixto</option>
+            <option value="wpa">WPA / TKIP</option>
+            <option value="wep">WEP o abierta</option>
+          </select>
+        </label>
+      </div>
+
+      <button class="run-audit" type="submit">Evaluar esta red</button>
+      <p class="form-note">No prueba contraseñas ni se conecta al router. Comparación local con claves por defecto y patrones débiles frecuentes.</p>
+    </form>
+
+    <div class="audit-result" hidden aria-live="polite">
+      <div class="result-score"><span class="score-dot"></span><strong></strong></div>
+      <h4></h4>
+      <ul></ul>
+      <button class="retry-audit" type="button">Revisar otra configuración</button>
+    </div>
+  </div>
 </div>
+
+<script>
+  const commonDefaults = new Set([
+    "admin", "admin123", "admin1234", "password", "password1", "router",
+    "wifi", "wifi1234", "internet", "12345678", "123456789", "1234567890",
+    "qwerty123", "00000000", "11111111", "abcdefgh",
+  ]);
+
+  document.querySelectorAll<HTMLElement>("[data-wifi-audit]").forEach((root) => {
+    const trigger = root.querySelector<HTMLButtonElement>(".audit-trigger")!;
+    const panel = root.querySelector<HTMLElement>(".audit-panel")!;
+    const form = root.querySelector<HTMLFormElement>(".audit-form")!;
+    const result = root.querySelector<HTMLElement>(".audit-result")!;
+    const password = form.elements.namedItem("password") as HTMLInputElement;
+    const wps = form.elements.namedItem("wps") as HTMLSelectElement;
+    const cipher = form.elements.namedItem("cipher") as HTMLSelectElement;
+    const toggle = root.querySelector<HTMLButtonElement>(".toggle-password")!;
+
+    const showPanel = () => {
+      panel.hidden = false;
+      form.hidden = false;
+      result.hidden = true;
+      trigger.setAttribute("aria-expanded", "true");
+      requestAnimationFrame(() => password.focus());
+    };
+
+    const closePanel = () => {
+      panel.hidden = true;
+      trigger.setAttribute("aria-expanded", "false");
+      password.value = "";
+      trigger.focus();
+    };
+
+    trigger.addEventListener("click", showPanel);
+    root.querySelector(".close-audit")?.addEventListener("click", closePanel);
+    root.querySelector(".retry-audit")?.addEventListener("click", () => {
+      result.hidden = true;
+      form.hidden = false;
+      password.value = "";
+      password.focus();
+    });
+    toggle.addEventListener("click", () => {
+      const showing = password.type === "text";
+      password.type = showing ? "password" : "text";
+      toggle.textContent = showing ? "Ver" : "Ocultar";
+      toggle.setAttribute("aria-label", showing ? "Mostrar contraseña" : "Ocultar contraseña");
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const value = password.value.trim();
+      const normalized = value.toLowerCase();
+      const findings: { level: number; text: string }[] = [];
+
+      if (commonDefaults.has(normalized)) {
+        findings.push({ level: 3, text: "La contraseña coincide con una clave por defecto o extremadamente común." });
+      } else if (value.length < 12) {
+        findings.push({ level: 2, text: "La contraseña tiene menos de 12 caracteres; conviene usar una frase más larga." });
+      } else if (!/[a-z]/i.test(value) || !/\d/.test(value)) {
+        findings.push({ level: 1, text: "La contraseña es larga, pero combinar letras y números mejora su resistencia." });
+      } else {
+        findings.push({ level: 0, text: "La contraseña no aparece en la lista local de claves por defecto y tiene buena longitud." });
+      }
+
+      if (wps.value === "pin") findings.push({ level: 3, text: "WPS por PIN está habilitado y es el punto más débil: desactivalo en el router." });
+      if (wps.value === "pbc") findings.push({ level: 1, text: "WPS funciona sólo con el botón físico; es preferible desactivarlo si no lo usás." });
+      if (wps.value === "off") findings.push({ level: 0, text: "WPS está desactivado." });
+      if (wps.value === "unknown") findings.push({ level: 1, text: "No se pudo evaluar WPS. Revisalo en la configuración del router." });
+
+      if (cipher.value === "wep") findings.push({ level: 3, text: "WEP o una red abierta no ofrecen protección adecuada. Cambiá a WPA2-AES o WPA3." });
+      if (cipher.value === "wpa") findings.push({ level: 3, text: "WPA/TKIP está obsoleto. Usá WPA2-AES o WPA3." });
+      if (cipher.value === "mixed") findings.push({ level: 2, text: "El modo mixto admite protocolos antiguos. Si tus equipos lo permiten, elegí WPA2-AES o WPA3." });
+      if (cipher.value === "wpa2") findings.push({ level: 0, text: "WPA2 con AES sigue siendo una configuración adecuada." });
+      if (cipher.value === "wpa3") findings.push({ level: 0, text: "WPA3 con AES es la opción más sólida disponible." });
+      if (cipher.value === "unknown") findings.push({ level: 1, text: "No se pudo evaluar el cifrado. Buscá “Seguridad” en el panel del router." });
+
+      const worst = Math.max(...findings.map((item) => item.level));
+      const state = worst >= 3
+        ? { key: "danger", score: "RIESGO ALTO", title: "Tu Wi-Fi necesita cambios" }
+        : worst === 2
+          ? { key: "warn", score: "REVISAR", title: "Hay margen para reforzarlo" }
+          : worst === 1
+            ? { key: "check", score: "FALTA VERIFICAR", title: "La base parece razonable" }
+            : { key: "safe", score: "PROTEGIDA", title: "Buena configuración" };
+
+      result.dataset.state = state.key;
+      result.querySelector(".result-score strong")!.textContent = state.score;
+      result.querySelector("h4")!.textContent = state.title;
+      const list = result.querySelector("ul")!;
+      list.replaceChildren(...findings.map((item) => {
+        const li = document.createElement("li");
+        li.dataset.level = String(item.level);
+        li.textContent = item.text;
+        return li;
+      }));
+      form.hidden = true;
+      result.hidden = false;
+      password.value = "";
+    });
+  });
+</script>
 
 <style>
   .kn {
     position: absolute;
     inset: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-    gap: 1.4em;
-    padding: 1.6em;
+    grid-template-columns: minmax(0, 1.18fr) minmax(15em, 0.82fr);
+    gap: 1.15em;
+    padding: 1.4em;
     background: #050505;
     color: #a1a1a6;
   }
-  .term { align-self: center; border: 1px solid #232326; border-radius: 0.8em; padding: 0.9em 1em 1.1em; font: 0.62em/1.85 var(--font-mono); background: #0b0b0c; }
+  .term { align-self: center; border: 1px solid #232326; border-radius: 0.8em; padding: 0.9em 1em 1.1em; font: 0.56em/1.85 var(--font-mono); background: #0b0b0c; min-width: 0; }
   .bar { display: flex; align-items: center; gap: 0.4em; margin-bottom: 0.8em; color: #5a5a5f; }
   .bar i { width: 0.7em; height: 0.7em; border-radius: 50%; background: #2c2c2e; }
   .bar span { margin-left: 0.6em; }
@@ -61,15 +219,54 @@ const chain = ["Bootloader", "Kernel", "TrustZone", "NetHunter"];
   .dim { color: #636366; }
   .cur { animation: blink 1s step-end infinite; }
 
-  /* el glitch dura lo que el scroll se queda en el paso del error */
   :global([data-step="3"]) .term { animation: glitch 0.22s steps(2) infinite; border-color: #ff453a; }
 
-  .chain { align-self: center; position: relative; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 1.6em; font: 600 0.8em var(--font-sans); color: #f5f5f7; }
-  .chain::before { content: ""; position: absolute; left: 0.45em; top: 0.6em; bottom: 0.6em; width: 1px; background: #2c2c2e; }
-  .chain::after { content: ""; position: absolute; left: 0.45em; top: 0.6em; width: 1px; height: calc(clamp(0, (var(--p) - 0.55) * 3.4, 1) * (100% - 1.2em)); background: #ff4f17; }
-  .chain li { position: relative; display: flex; align-items: center; gap: 1em; opacity: calc(0.3 + 0.7 * clamp(0, (var(--p) - var(--a)) * 20, 1)); }
-  .dot { width: 0.9em; height: 0.9em; border-radius: 50%; border: 1px solid #3a3a3c; background: #050505; z-index: 1; }
-  .chain li .dot { box-shadow: 0 0 0 calc(clamp(0, (var(--p) - var(--a)) * 20, 1) * 4px) rgba(255, 79, 23, 0.25); background: rgba(255, 79, 23, clamp(0, (var(--p) - var(--a)) * 20, 1)); }
+  .audit-card { align-self: center; padding: 1.15em; border: 1px solid #242426; border-radius: 1em; background: linear-gradient(145deg, #111112, #090909); box-shadow: 0 1.2em 3em #0008; }
+  .audit-intro { display: flex; gap: 0.7em; align-items: flex-start; }
+  .signal-dot { width: 0.72em; height: 0.72em; margin-top: 0.18em; border-radius: 50%; background: #ff4f17; box-shadow: 0 0 0 0.28em #ff4f1726; flex: 0 0 auto; }
+  .eyebrow { margin: 0 0 0.45em; color: #ff6b38; font: 600 0.48em/1 var(--font-mono); letter-spacing: 0.12em; }
+  .audit-card h4, .panel-head h4, .audit-result h4 { margin: 0; color: #f5f5f7; font: 650 0.95em/1.12 var(--font-sans); letter-spacing: -0.025em; }
+  .audit-copy { margin: 0.9em 0 1.05em; font: 0.61em/1.45 var(--font-sans); color: #8e8e93; }
+  button, input, select { font: inherit; }
+  .audit-trigger, .run-audit, .retry-audit { width: 100%; border: 0; border-radius: 0.7em; padding: 0.82em 0.9em; background: #ff4f17; color: #fff; font: 650 0.64em/1 var(--font-sans); cursor: pointer; transition: transform 160ms ease, background 160ms ease; }
+  .audit-trigger { display: flex; justify-content: space-between; align-items: center; }
+  .audit-trigger:hover, .run-audit:hover, .retry-audit:hover { background: #ff6938; transform: translateY(-1px); }
+  .audit-trigger:focus-visible, .run-audit:focus-visible, .retry-audit:focus-visible, .close-audit:focus-visible, .toggle-password:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #ff8a62; outline-offset: 2px; }
+  .privacy, .form-note { margin: 0.8em 0 0; color: #636366; font: 0.43em/1.45 var(--font-mono); }
+  .privacy span { color: #30d158; }
+
+  .audit-panel { position: absolute; inset: 0.72em; z-index: 5; overflow: auto; padding: 1.15em; border: 1px solid #2c2c2e; border-radius: 1em; background: rgba(9, 9, 10, 0.98); box-shadow: 0 1.5em 4em #000c; }
+  .audit-panel[hidden], .audit-form[hidden], .audit-result[hidden] { display: none; }
+  .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1em; margin-bottom: 1em; }
+  .close-audit { width: 1.8em; height: 1.8em; border: 1px solid #333337; border-radius: 50%; background: #171719; color: #f5f5f7; font: 1em/1 var(--font-sans); cursor: pointer; }
+  .audit-form > label, .field-row label { display: grid; gap: 0.42em; color: #d1d1d6; font: 0.52em/1.2 var(--font-sans); }
+  .password-wrap { position: relative; display: block; }
+  input, select { width: 100%; border: 1px solid #333337; border-radius: 0.62em; padding: 0.68em 0.78em; background: #111113; color: #f5f5f7; font-size: 1.08em; }
+  input { padding-right: 4.7em; }
+  select { appearance: auto; }
+  .toggle-password { position: absolute; right: 0.65em; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: #ff7547; font-size: 0.9em; cursor: pointer; }
+  .field-row { display: grid; grid-template-columns: 1fr 1.25fr; gap: 0.7em; margin-top: 0.75em; }
+  .run-audit { margin-top: 1em; }
+
+  .audit-result { max-width: 27em; margin: 0 auto; padding: 1em 0.4em; }
+  .result-score { display: flex; align-items: center; gap: 0.5em; margin-bottom: 0.7em; color: #ffd60a; font: 650 0.5em/1 var(--font-mono); letter-spacing: 0.1em; }
+  .score-dot { width: 0.65em; height: 0.65em; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 0.28em color-mix(in srgb, currentColor 18%, transparent); }
+  .audit-result[data-state="danger"] .result-score { color: #ff453a; }
+  .audit-result[data-state="safe"] .result-score { color: #30d158; }
+  .audit-result[data-state="check"] .result-score { color: #64d2ff; }
+  .audit-result ul { display: grid; gap: 0.55em; margin: 1em 0; padding: 0; list-style: none; }
+  .audit-result li { position: relative; padding-left: 1.3em; color: #a1a1a6; font: 0.52em/1.42 var(--font-sans); }
+  .audit-result li::before { content: "✓"; position: absolute; left: 0; color: #30d158; }
+  .audit-result li[data-level="2"]::before { content: "!"; color: #ffd60a; }
+  .audit-result li[data-level="3"]::before { content: "×"; color: #ff453a; }
+  .retry-audit { margin-top: 0.25em; background: #252527; }
+
+  @media (max-width: 35rem) {
+    .kn { grid-template-columns: 1fr; padding: 1em; }
+    .term { display: none; }
+    .audit-card { max-width: 22em; margin: auto; }
+    .audit-panel { inset: 0.45em; }
+  }
 
   @keyframes glitch { 0% { transform: translate(2px, -1px); } 100% { transform: translate(-2px, 1px); } }
   @keyframes blink { 50% { opacity: 0; } }
