@@ -1,42 +1,135 @@
 ---
-// Checkout.astro — el flujo de compra avanza con el scroll: producto → carrito → pago → confirmado
+// Producto real de Khorven elegido al azar por visita. El flujo avanza con el
+// scroll del capítulo: producto → carrito → pago → confirmado.
 const steps = ["Producto", "Carrito", "Pago", "Confirmado"];
+const raw = "/images/khorven";
+const products = [
+  { name: "Buzo Spider", category: "Streetwear", price: 134900, image: `${raw}/spider-hoodie.webp` },
+  { name: "Campera Prada", category: "Streetwear", price: 166900, image: `${raw}/prada-jacket.webp` },
+  { name: "Conjunto Dior", category: "Streetwear", price: 157900, image: `${raw}/dior-set.webp` },
+  { name: "Billetera Goyard", category: "Lujo · Accesorios", price: 45900, image: `${raw}/goyard-wallet.webp` },
+  { name: "Bolso Supreme", category: "Lujo · Accesorios", price: 50900, image: `${raw}/supreme-bag.webp` },
+  { name: "Cinto Louis Vuitton", category: "Lujo · Accesorios", price: 55900, image: `${raw}/lv-belt.webp` },
+  { name: "Pulsera Chrome Hearts", category: "Lujo · Joyería", price: 69900, image: `${raw}/chrome-hearts-bracelet.webp` },
+  { name: "Camiseta Brasil 2026", category: "Fútbol", price: 64900, image: `${raw}/brasil-jersey.webp` },
+  { name: "Conjunto Alo", category: "Deportes", price: 64900, image: `${raw}/alo-set.webp` },
+  { name: "Botas UGG", category: "Calzado", price: 208900, image: `${raw}/ugg-boots.webp` },
+  { name: "Zapatillas UGG Lowmel", category: "Calzado", price: 166900, image: `${raw}/ugg-lowmel-trainer.webp` },
+  { name: "Swatch x Audemars Piguet", category: "Lujo · Relojes", price: 166900, image: `${raw}/swatch-audemars-royal-pop-01.webp` },
+];
 ---
 
-<div class="co">
+<div class="co" data-khorven-checkout data-products={JSON.stringify(products)}>
+  <div class="brand"><span>KHORVEN</span><i>DROP 01</i></div>
   <ol class="steps">
-    {steps.map((s, i) => <li style={`--a:${i * 0.25}`}><span class="n">{i + 1}</span>{s}</li>)}
+    {steps.map((step, index) => <li style={`--a:${index * 0.25}`}><span class="n">{index + 1}</span>{step}</li>)}
     <span class="track"><span class="fill"></span></span>
   </ol>
 
   <div class="panels">
-    <div class="pn" style="--a:0"><div class="thumb"></div><strong>Buzo oversize</strong><span>$42.000</span><button>Agregar al carrito</button></div>
-    <div class="pn" style="--a:.25"><div class="row"><div class="thumb sm"></div><span>Buzo oversize × 1</span><b>$42.000</b></div><div class="row tot"><span>Total</span><b>$42.000</b></div></div>
-    <div class="pn" style="--a:.5"><div class="cardnum">•••• •••• •••• 4242</div><button>Pagar $42.000</button></div>
-    <div class="pn done" style="--a:.75"><span class="check">✓</span><strong>Pedido confirmado</strong><span>#KH-10294</span></div>
+    <div class="pn product-panel" style="--a:0">
+      <div class="thumb"><img data-product-image src={products[0].image} alt="" /></div>
+      <span class="category" data-product-category>{products[0].category}</span>
+      <strong data-product-name>{products[0].name}</strong>
+      <span class="price" data-product-price>$134.900</span>
+      <span class="cta">Agregar al carrito</span>
+    </div>
+
+    <div class="pn" style="--a:.25">
+      <div class="row">
+        <div class="thumb sm"><img data-product-image src={products[0].image} alt="" /></div>
+        <span><b data-product-name>{products[0].name}</b><small>× 1</small></span>
+        <b data-product-price>$134.900</b>
+      </div>
+      <div class="row tot"><span>Total</span><b data-product-price>$134.900</b></div>
+      <span class="cta">Continuar al pago</span>
+    </div>
+
+    <div class="pn payment" style="--a:.5">
+      <span class="secure">● PAGO PROTEGIDO</span>
+      <div class="cardnum">•••• •••• •••• 4242</div>
+      <div class="row"><span>Total</span><b data-product-price>$134.900</b></div>
+      <span class="cta">Pagar <b data-product-price>$134.900</b></span>
+    </div>
+
+    <div class="pn done" style="--a:.75">
+      <span class="check">✓</span>
+      <strong>Pedido confirmado</strong>
+      <span data-product-name>{products[0].name}</span>
+      <small>#KH-10294 · Seguimiento incluido</small>
+    </div>
   </div>
 </div>
 
+<script>
+  document.querySelectorAll<HTMLElement>("[data-khorven-checkout]").forEach((checkout) => {
+    const products = JSON.parse(checkout.dataset.products || "[]") as Array<{
+      name: string;
+      category: string;
+      price: number;
+      image: string;
+    }>;
+    if (products.length === 0) return;
+
+    const product = products[Math.floor(Math.random() * products.length)];
+    const price = new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: "ARS",
+      maximumFractionDigits: 0,
+    }).format(product.price);
+
+    checkout.querySelectorAll<HTMLImageElement>("[data-product-image]").forEach((image) => {
+      image.src = product.image;
+    });
+    checkout.querySelectorAll<HTMLElement>("[data-product-name]").forEach((node) => {
+      node.textContent = product.name;
+    });
+    checkout.querySelectorAll<HTMLElement>("[data-product-price]").forEach((node) => {
+      node.textContent = price;
+    });
+    checkout.querySelectorAll<HTMLElement>("[data-product-category]").forEach((node) => {
+      node.textContent = product.category;
+    });
+  });
+</script>
+
 <style>
-  .co { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 1.6em; padding: 1.8em; background: var(--color-soft); }
-  .steps { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; padding: 0; list-style: none; font-size: 0.7em; }
-  .steps li { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 0.6em; color: var(--color-mute); }
-  .n { display: grid; place-items: center; width: 2.2em; height: 2.2em; border-radius: 50%; background: #fff; border: 1px solid var(--color-rule); font: 600 0.9em var(--font-mono); }
+  .co { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 1.1em; padding: 1.35em 1.7em 1.55em; background: #f4f4f6; color: #090909; }
+  .brand { display: flex; align-items: center; justify-content: space-between; font: 700 0.5em/1 var(--font-mono); letter-spacing: 0.14em; }
+  .brand i { color: #8e8e93; font-style: normal; font-weight: 500; }
+  .steps { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; padding: 0; list-style: none; font-size: 0.65em; }
+  .steps li { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 0.55em; color: var(--color-mute); }
+  .n { display: grid; place-items: center; width: 2.15em; height: 2.15em; border-radius: 50%; background: #fff; border: 1px solid var(--color-rule); font: 600 0.9em var(--font-mono); }
   .steps li { --on: clamp(0, (var(--p) - var(--a)) * 20, 1); color: color-mix(in srgb, var(--color-ink) calc(var(--on) * 100%), var(--color-mute)); }
   .steps li .n { background: color-mix(in srgb, var(--color-ink) calc(var(--on) * 100%), #fff); color: color-mix(in srgb, #fff calc(var(--on) * 100%), var(--color-ink)); }
-  .track { position: absolute; left: 12.5%; right: 12.5%; top: 1.1em; height: 1px; background: var(--color-rule); }
+  .track { position: absolute; left: 12.5%; right: 12.5%; top: 1.06em; height: 1px; background: var(--color-rule); }
   .fill { display: block; height: 100%; width: calc(clamp(0, var(--p) / 0.75, 1) * 100%); background: var(--color-ink); }
 
-  .panels { flex: 1; display: grid; }
-  .pn { grid-area: 1 / 1; align-self: center; justify-self: center; width: min(100%, 18em); display: flex; flex-direction: column; gap: 0.7em; padding: 1.4em; border-radius: 1em; background: #fff; box-shadow: 0 1.4em 3em -2em rgba(0, 0, 0, 0.3); font-size: 0.8em;
+  .panels { flex: 1; min-height: 0; display: grid; }
+  .pn { grid-area: 1 / 1; align-self: center; justify-self: center; width: min(100%, 18em); display: flex; flex-direction: column; gap: 0.62em; padding: 1.1em; border: 1px solid #e4e4e7; border-radius: 1em; background: #fff; box-shadow: 0 1.4em 3em -2em rgba(0, 0, 0, 0.3); font-size: 0.76em;
     --vis: calc(clamp(0, (var(--p) - var(--a)) * 20, 1) - clamp(0, (var(--p) - var(--a) - 0.25) * 20, 1));
-    opacity: var(--vis); transform: translateY(calc((1 - var(--vis)) * 1em)); }
+    opacity: var(--vis); transform: translateY(calc((1 - var(--vis)) * 1em)); pointer-events: none; }
   .pn.done { --vis: clamp(0, (var(--p) - 0.75) * 20, 1); align-items: center; text-align: center; }
-  .thumb { aspect-ratio: 16 / 10; border-radius: 0.6em; background: linear-gradient(135deg, #d2d2d7, #a1a1a6); }
-  .thumb.sm { width: 2.6em; aspect-ratio: 1; }
-  .pn button { height: 2.6em; border-radius: 99px; background: var(--color-ink); color: #fff; font: inherit; font-size: 0.9em; }
-  .row { display: flex; align-items: center; gap: 0.8em; justify-content: space-between; }
-  .tot { border-top: 1px solid var(--color-rule); padding-top: 0.7em; }
-  .cardnum { padding: 1em; border-radius: 0.6em; background: #0a0a0a; color: #fff; font-family: var(--font-mono); }
-  .check { display: grid; place-items: center; width: 2.6em; height: 2.6em; border-radius: 50%; background: var(--color-signal); color: #fff; font-size: 1.2em; }
+  .thumb { aspect-ratio: 16 / 10; overflow: hidden; border-radius: 0.65em; background: #f2f2f4; }
+  .thumb img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+  .thumb.sm { width: 3.2em; aspect-ratio: 1; flex: 0 0 auto; }
+  .category, .secure { color: #ff4f17; font: 650 0.5em/1 var(--font-mono); letter-spacing: 0.09em; text-transform: uppercase; }
+  .product-panel > strong { font-size: 1.08em; line-height: 1.1; }
+  .price { font-weight: 650; }
+  .cta { display: grid; place-items: center; min-height: 2.65em; border-radius: 99px; background: var(--color-ink); color: #fff; font-weight: 600; font-size: 0.9em; }
+  .row { display: flex; align-items: center; gap: 0.75em; justify-content: space-between; }
+  .row > span { display: grid; gap: 0.25em; margin-right: auto; }
+  .row small { color: #8e8e93; }
+  .tot { border-top: 1px solid var(--color-rule); padding-top: 0.72em; }
+  .cardnum { padding: 1em; border-radius: 0.6em; background: #0a0a0a; color: #fff; font-family: var(--font-mono); letter-spacing: 0.08em; }
+  .payment .cta { display: flex; gap: 0.35em; justify-content: center; }
+  .check { display: grid; place-items: center; width: 2.8em; height: 2.8em; border-radius: 50%; background: var(--color-signal); color: #fff; font-size: 1.2em; }
+  .done small { color: #8e8e93; }
+
+  @media (max-width: 34rem) {
+    .co { padding: 1em; }
+    .brand { display: none; }
+    .steps { font-size: 0.55em; }
+    .pn { font-size: 0.68em; }
+  }
 </style>
