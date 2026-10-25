@@ -2,7 +2,7 @@
 // Producto real de Khorven elegido al azar por visita. El flujo avanza con el
 // scroll del capítulo: producto → carrito → pago → confirmado.
 const steps = ["Producto", "Carrito", "Pago", "Confirmado"];
-const raw = "/images/khorven";
+const raw = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/images/khorven`;
 const products = [
   { name: "Buzo Spider", category: "Streetwear", price: 134900, image: `${raw}/spider-hoodie.webp` },
   { name: "Campera Prada", category: "Streetwear", price: 166900, image: `${raw}/prada-jacket.webp` },

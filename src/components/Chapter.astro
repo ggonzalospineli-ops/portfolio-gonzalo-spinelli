@@ -9,6 +9,7 @@ import Checkout from "./visuals/Checkout.astro";
 import Dashboard from "./visuals/Dashboard.astro";
 import Doorbell from "./visuals/Doorbell.astro";
 import Recommender from "./visuals/Recommender.astro";
+import Argos from "./visuals/Argos.astro";
 
 interface Props {
   p: Project;
@@ -16,7 +17,7 @@ interface Props {
   total: number;
 }
 const { p, i, total } = Astro.props;
-const visuals = { model3d: Model3D, kernel: Kernel, cipher: Cipher, catalog: Catalog, checkout: Checkout, dashboard: Dashboard, doorbell: Doorbell, recommender: Recommender };
+const visuals = { model3d: Model3D, kernel: Kernel, cipher: Cipher, catalog: Catalog, checkout: Checkout, dashboard: Dashboard, doorbell: Doorbell, recommender: Recommender, argos: Argos };
 const Visual = visuals[p.visual];
 const n = String(i + 1).padStart(2, "0");
 ---

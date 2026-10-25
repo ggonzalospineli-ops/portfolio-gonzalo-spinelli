@@ -10,7 +10,7 @@ export const site = {
 };
 
 // cada visual es un componente en src/components/visuals/ que se anima con el scroll (--p y data-step)
-export type Visual = "model3d" | "kernel" | "cipher" | "catalog" | "checkout" | "dashboard" | "doorbell" | "recommender";
+export type Visual = "model3d" | "kernel" | "cipher" | "catalog" | "checkout" | "dashboard" | "doorbell" | "recommender" | "argos";
 export type ProjectLink = { href: string; label: string };
 export type Project = {
   visual: Visual;
@@ -24,12 +24,13 @@ export type Project = {
   links: ProjectLink[];
   dark?: boolean; // capítulo con fondo negro
   model?: string; // .glb en /public para el visual model3d
+  photo?: string; // foto de referencia en /public para la etapa 1 del visual model3d
 };
 
 export const projects: Project[] = [
   {
     visual: "model3d",
-    name: "JorgeM",
+    name: "Custom Mod",
     headline: "Una persona real, convertida en jefe de Elden Ring.",
     discipline: "IA generativa 3D · Ingeniería inversa",
     status: "Terminado",
@@ -42,7 +43,8 @@ export const projects: Project[] = [
     tags: ["Hunyuan3D", "PyTorch", "Blender", "Soulstruct", "Python"],
     links: [],
     dark: true,
-    model: "", // TODO: "/models/jorgem.glb"
+    model: "/models/custom-mod.glb",
+    photo: "/images/custom-mod-ref.webp",
   },
   {
     visual: "kernel",
@@ -58,6 +60,25 @@ export const projects: Project[] = [
     ],
     tags: ["C", "Kernel Linux", "Android", "TrustZone / Knox"],
     links: [],
+    dark: true,
+  },
+  {
+    visual: "argos",
+    name: "ARGOS",
+    headline: "Reconocimiento aéreo soberano para fronteras, ríos y costas.",
+    discipline: "Hardware & Visión computacional · En colaboración",
+    status: "Prototipo",
+    desc: "Dron modular de vigilancia con detección térmica y RGB a bordo y enlace cifrado de extremo a extremo. Arquitectura aislada: cada byte queda entre la aeronave y la estación en tierra, sin nube ni servidores de terceros.",
+    highlights: [
+      "Fusión multiespectral (LWIR + RGB) con confirmación cruzada en tiempo real sobre Jetson Orin Nano.",
+      "Enlace MAVLink y video con autenticación mutua Ed25519 y cifrado AES-256-GCM sin CA ni intermediarios.",
+      "Operación 100% aislada de internet (air-gapped): telemetría y video nunca abandonan la red local.",
+    ],
+    tags: ["Jetson Orin Nano", "YOLOv8", "Térmica LWIR", "AES-256-GCM", "Python", "MAVLink"],
+    links: [
+      { href: "https://ggonzalospineli-ops.github.io/proyecto-argos/", label: "Ver proyecto" },
+      { href: "https://github.com/ggonzalospineli-ops/proyecto-argos", label: "Código" },
+    ],
     dark: true,
   },
   {
@@ -77,7 +98,7 @@ export const projects: Project[] = [
   },
   {
     visual: "catalog",
-    name: "EPA Accesorios",
+    name: "Bolsa Grande",
     headline: "1.400 productos importados. Un negocio real, en línea.",
     discipline: "Ecommerce",
     status: "En producción",
@@ -87,7 +108,7 @@ export const projects: Project[] = [
       "Precios regulares y promocionales, con control de stock.",
     ],
     tags: ["Ecommerce", "Catálogo", "Stock"],
-    links: [{ href: "https://www.epaccesorios.com.ar/", label: "Ver tienda" }],
+    links: [{ href: "https://ggonzalospineli-ops.github.io/bolsa-mayor/", label: "Ver tienda" }],
   },
   {
     visual: "checkout",

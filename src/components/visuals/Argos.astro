@@ -1,0 +1,179 @@
+---
+// Argos.astro — visor de reconocimiento ARGOS-1: al scrollear barre el terreno, fija cajas de
+// detección sobre los objetivos, cambia de RGB a térmico (LWIR) y marca "CONFIRMADO" cuando
+// un objetivo se ve en ambos espectros. Todo guiado por --p, sin JS.
+const targets = [
+  { cls: "PERSONA", conf: "0.92", x: 20, y: 44, w: 9, h: 21, a: 0.2 },
+  { cls: "4×4", conf: "0.88", x: 45, y: 38, w: 20, h: 16, a: 0.33 },
+  { cls: "LANCHA", conf: "0.95", x: 66, y: 60, w: 26, h: 13, a: 0.46, main: true },
+];
+---
+
+<div class="argos" aria-hidden="true">
+  <div class="feed">
+    <div class="terrain"></div>
+    <div class="thermal"></div>
+    <div class="grid"></div>
+    <div class="scan"></div>
+
+    {
+      targets.map((t) => (
+        <div class={`det${t.main ? " main" : ""}`} style={`--x:${t.x}%;--y:${t.y}%;--w:${t.w}%;--h:${t.h}%;--a:${t.a}`}>
+          <span class="tag">
+            {t.cls} <i>{t.conf}</i>
+          </span>
+          {t.main && <span class="confirmed">● CONFIRMADO</span>}
+        </div>
+      ))
+    }
+
+    <i class="br tl" /><i class="br tr" /><i class="br bl" /><i class="br brr" />
+  </div>
+
+  <div class="hud top">
+    <span class="specwrap">
+      <span class="spec rgb">RGB</span>
+      <span class="spec lwir">LWIR · TÉRMICO</span>
+    </span>
+    <span class="rec"><i /> REC</span>
+  </div>
+  <div class="hud bot">
+    <span>ENLACE · AES-256-GCM · E2E</span>
+    <span class="nocloud">● SIN NUBE</span>
+    <span>ALT 120 m · 10 km</span>
+  </div>
+</div>
+
+<style>
+  .argos {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(80% 80% at 50% 40%, #0b0e10, #050505 72%);
+    color: #aeb6b4;
+    font: 0.6em/1.4 var(--font-mono);
+    overflow: hidden;
+    --signal: #ff4f17;
+  }
+
+  .feed {
+    position: absolute;
+    inset: 2.6em 1.6em;
+    border: 1px solid #1b2124;
+    border-radius: 0.5em;
+    overflow: hidden;
+    background: #04070a;
+  }
+
+  /* terreno fluvial/costero en RGB */
+  .terrain {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(105deg, #12331f 0 38%, #0e2a30 38% 52%, #0b1f26 52% 100%),
+      radial-gradient(60% 40% at 78% 70%, #0d343f, transparent 70%);
+    filter: saturate(0.8) brightness(0.85);
+  }
+  /* superposición térmica: aparece pasada la mitad del scroll */
+  .thermal {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, #1a0033 0%, #2a0a4d 30%, #7a1f00 60%, #ff7a00 82%, #ffe39a 100%);
+    mix-blend-mode: screen;
+    opacity: clamp(0, (var(--p) - 0.48) * 9, 0.92);
+  }
+  .grid {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(#ffffff0e 1px, transparent 1px), linear-gradient(90deg, #ffffff0e 1px, transparent 1px);
+    background-size: 2.4em 2.4em;
+    opacity: 0.5;
+  }
+  /* línea de barrido que recorre el cuadro con el scroll */
+  .scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: clamp(0%, calc(var(--p) * 100%), 100%);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--signal), transparent);
+    box-shadow: 0 0 1.4em 0.2em #ff4f1766;
+    opacity: clamp(0, (0.96 - var(--p)) * 6, 1);
+  }
+
+  /* cajas de detección: se fijan de a una a medida que avanza el barrido */
+  .det {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--w);
+    height: var(--h);
+    border: 1px solid var(--signal);
+    box-shadow: inset 0 0 0 1px #00000040, 0 0 1.2em #ff4f1733;
+    opacity: clamp(0, (var(--p) - var(--a)) * 16, 1);
+    transform: scale(calc(0.86 + 0.14 * clamp(0, (var(--p) - var(--a)) * 16, 1)));
+    transform-origin: center;
+  }
+  .det .tag {
+    position: absolute;
+    left: -1px;
+    bottom: 100%;
+    margin-bottom: 0.25em;
+    padding: 0.12em 0.4em;
+    white-space: nowrap;
+    background: var(--signal);
+    color: #0a0a0a;
+    font: 650 0.78em/1 var(--font-mono);
+    letter-spacing: 0.04em;
+  }
+  .det .tag i { font-style: normal; opacity: 0.7; }
+  .det.main { border-color: #30d158; box-shadow: 0 0 1.4em #30d15844; }
+  .det.main .tag { background: #30d158; }
+  .confirmed {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    margin-top: 0.4em;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    color: #30d158;
+    font: 650 0.74em/1 var(--font-mono);
+    letter-spacing: 0.1em;
+    opacity: clamp(0, (var(--p) - 0.74) * 16, 1);
+  }
+
+  /* esquinas tipo retícula */
+  .br { position: absolute; width: 1.1em; height: 1.1em; border: 1px solid #ffffff55; }
+  .br.tl { top: 0.5em; left: 0.5em; border-right: 0; border-bottom: 0; }
+  .br.tr { top: 0.5em; right: 0.5em; border-left: 0; border-bottom: 0; }
+  .br.bl { bottom: 0.5em; left: 0.5em; border-right: 0; border-top: 0; }
+  .br.brr { bottom: 0.5em; right: 0.5em; border-left: 0; border-top: 0; }
+
+  /* HUD */
+  .hud {
+    position: absolute;
+    left: 1.6em;
+    right: 1.6em;
+    display: flex;
+    justify-content: space-between;
+    gap: 1em;
+    font: 0.72em/1 var(--font-mono);
+    letter-spacing: 0.06em;
+    color: #8a918f;
+  }
+  .hud.top { top: 1em; }
+  .hud.bot { bottom: 1em; }
+  .specwrap { position: relative; display: inline-grid; color: #e7e2d6; }
+  .spec { grid-area: 1 / 1; }
+  .spec.rgb { opacity: clamp(0, 1 - (var(--p) - 0.42) * 12, 1); }
+  .spec.lwir { color: #ffb37a; opacity: clamp(0, (var(--p) - 0.5) * 12, 1); }
+  .rec { color: var(--signal); display: inline-flex; align-items: center; gap: 0.4em; }
+  .rec i { width: 0.55em; height: 0.55em; border-radius: 50%; background: var(--signal); animation: pulse 1.2s ease-in-out infinite; }
+  .nocloud { color: #30d158; }
+
+  @keyframes pulse { 50% { opacity: 0.25; } }
+
+  @media (max-width: 34rem) {
+    .hud { font-size: 0.62em; }
+    .feed { inset: 2.4em 1.1em; }
+  }
+</style>

@@ -1,12 +1,20 @@
 ---
 // Index.astro — índice de proyectos tipo tabla; cada fila lleva a su capítulo
 import { projects } from "../data/portfolio";
+
+const numberWords: Record<number, string> = {
+  7: "Siete",
+  8: "Ocho",
+  9: "Nueve",
+  10: "Diez",
+};
+const countWord = numberWords[projects.length] ?? String(projects.length);
 ---
 
 <section id="index" data-nav-label="Índice" class="py-28 sm:py-36">
   <div class="wrap">
     <div class="mb-14 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-      <h2 class="headline max-w-3xl" data-reveal>Ocho proyectos.<br /><span class="text-mute">Cada uno, de punta a punta.</span></h2>
+      <h2 class="headline max-w-3xl" data-reveal>{countWord} proyectos.<br /><span class="text-mute">Cada uno, de punta a punta.</span></h2>
       <p class="label" data-reveal>{String(projects.length).padStart(2, "0")} capítulos</p>
     </div>
 

@@ -9,6 +9,7 @@ interface Props {
 const { p } = Astro.props;
 const stages = ["Foto", "Malla", "Textura", "En el juego"];
 const hex = ["4D 54 52 4C", "00 00 80 3F", "00 00 00 00", "FF FF FF FF"];
+const asset = (url?: string) => (url ? `${import.meta.env.BASE_URL.replace(/\/$/, "")}/${url.replace(/^\//, "")}` : "");
 ---
 
 <div class="m3d">
@@ -17,10 +18,10 @@ const hex = ["4D 54 52 4C", "00 00 80 3F", "00 00 00 00", "FF FF FF FF"];
   </ol>
 
   <div class="center">
-    <div class="photo"><span></span></div>
+    {p.photo ? <div class="photo real"><img src={asset(p.photo)} alt="" /></div> : <div class="photo"><span></span></div>}
     {
       p.model ? (
-        <model-viewer src={p.model} alt={p.name} interaction-prompt="none" disable-zoom loading="lazy" class="viewer" data-scroll-orbit />
+        <model-viewer src={asset(p.model)} alt={p.name} camera-controls touch-action="pan-y" interaction-prompt="none" disable-zoom disable-pan loading="lazy" class="viewer" data-scroll-orbit />
       ) : (
         <div class="scene">
           <div class="cube">{["f", "b", "l", "r", "t", "d"].map((s) => <span class={`face ${s}`} />)}</div>
@@ -38,14 +39,62 @@ const hex = ["4D 54 52 4C", "00 00 80 3F", "00 00 00 00", "FF FF FF FF"];
 
 {p.model && <script is:inline type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>}
 <script>
-  // con un .glb real, el scroll rota la cámara del modelo
-  document.querySelectorAll<HTMLElement>("[data-scroll-orbit]").forEach((v) => {
-    const sec = v.closest<HTMLElement>("[data-scrub]")!;
+  // con un .glb real, el scroll rota la cámara del modelo; si el usuario lo arrastra, el scroll sigue
+  // rotando desde donde lo dejó. El zoom con la rueda se habilita al hacer click (si no, atraparía el scroll de la página)
+  document.querySelectorAll<any>("[data-scroll-orbit]").forEach((v) => {
+    const sec = v.closest("[data-scrub]") as HTMLElement;
+    const photo = sec.querySelector<HTMLElement>(".photo");
+    const scrollP = () => parseFloat(getComputedStyle(sec).getPropertyValue("--p")) || 0;
+    let base = -30, phi = "78deg", radius = "auto", lastP = 0, dragging = false, moved = false, sx = 0, sy = 0;
     const tick = () => {
-      const p = parseFloat(getComputedStyle(sec).getPropertyValue("--p")) || 0;
-      v.setAttribute("camera-orbit", `${-30 + p * 300}deg 78deg auto`);
+      const p = scrollP();
+      // la foto ya desvanecida igual dejaba bordes visibles detrás del modelo
+      if (photo) photo.style.visibility = p >= 0.19 ? "hidden" : "";
+      if (!dragging) {
+        // la cámara tiene inercia: tomar la posición que dejó el usuario recién al volver a scrollear
+        if (moved) {
+          const o = v.getCameraOrbit();
+          base = (o.theta * 180) / Math.PI - lastP * 300;
+          phi = `${o.phi}rad`;
+          radius = `${o.radius}m`;
+          moved = false;
+        }
+        v.setAttribute("camera-orbit", `${base + p * 300}deg ${phi} ${radius}`);
+      }
+      lastP = p;
     };
-    addEventListener("scroll", () => requestAnimationFrame(tick), { passive: true });
+    v.addEventListener("pointerdown", (e: PointerEvent) => {
+      dragging = moved = true;
+      sx = e.clientX;
+      sy = e.clientY;
+      v.removeAttribute("disable-zoom");
+      v.setAttribute("data-lenis-prevent", "");
+    });
+    addEventListener("pointerup", () => (dragging = false));
+    v.addEventListener("pointerleave", () => {
+      v.setAttribute("disable-zoom", "");
+      v.removeAttribute("data-lenis-prevent");
+    });
+    // click/tap sobre el modelo = elegir hacia dónde hace zoom: el punto tocado pasa a ser el centro de la cámara
+    v.addEventListener("click", (e: PointerEvent) => {
+      if (Math.hypot(e.clientX - sx, e.clientY - sy) > 6) return; // fue un arrastre para rotar, no una selección
+      const hit = v.positionAndNormalFromPoint(e.clientX, e.clientY);
+      if (!hit) return; // tocó el fondo, no el modelo
+      v.removeAttribute("disable-zoom");
+      v.cameraTarget = hit.position.toString();
+      moved = true; // re-sincronizar la órbita con el nuevo centro en el próximo scroll
+    });
+    // doble click/tap = volver a centrar en el modelo entero
+    v.addEventListener("dblclick", () => {
+      v.cameraTarget = "auto auto auto";
+      moved = true;
+    });
+    // arrastre y zoom con la rueda
+    v.addEventListener("camera-change", (e: CustomEvent) => {
+      if (e.detail.source === "user-interaction") moved = true;
+    });
+    // reaccionar cuando motion.ts escribe --p (con un listener de scroll propio se leía el valor del frame anterior)
+    new MutationObserver(tick).observe(sec, { attributes: true, attributeFilter: ["style"] });
     tick();
   });
 </script>
@@ -66,6 +115,9 @@ const hex = ["4D 54 52 4C", "00 00 80 3F", "00 00 00 00", "FF FF FF FF"];
   .center > * { grid-area: 1 / 1; }
   /* etapa 1: retrato que se desvanece */
   .photo { width: 30%; aspect-ratio: 3 / 4; border-radius: 0.6em; background: linear-gradient(#3a342a, #1d1a15); display: grid; place-items: end center; overflow: hidden; opacity: calc(1 - clamp(0, (var(--p) - 0.12) * 8, 1)); transform: scale(calc(1 - var(--p) * 0.4)); }
+  /* la foto real se va antes (en p = 0.2): con el modelo encima, la cola del fundido dejaba ver solo sus bordes */
+  .photo.real { width: auto; height: 100%; aspect-ratio: 2 / 3; background: #fff; opacity: calc(1 - clamp(0, (var(--p) - 0.12) * 12.5, 1)); }
+  .photo.real img { width: 100%; height: 100%; object-fit: cover; }
   .photo span { width: 70%; aspect-ratio: 1; margin-bottom: -18%; border-radius: 50% 50% 0 0; background: #6b604d; box-shadow: 0 -4.6em 0 -1.1em #6b604d; }
 
   .scene { perspective: 900px; opacity: clamp(0, (var(--p) - 0.12) * 8, 1); }
