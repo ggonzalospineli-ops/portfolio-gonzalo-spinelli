@@ -1,27 +1,133 @@
 ---
-// Catalog.astro — una grilla de 1.400 mini-productos que hace zoom hasta quedar en uno solo,
-// que después cambia de variante
-const swatches = ["#1d1d1f", "#b08d57", "#5e7a8a"];
+// Muestra corta tomada del catálogo real de Bolsa Mayor. El orden se mezcla en
+// el navegador y el producto destacado cambia a medida que avanza el scroll del capítulo.
+const products = [
+  {
+    name: "Carry On Chimola Vermont – L10",
+    category: "Valijas · Viaje",
+    price: 69900,
+    regular: 100000,
+    image: "https://www.epaccesorios.com.ar/wp-content/uploads/2026/10/L10-NEGRO-400x400.jpg",
+  },
+  {
+    name: "Mochila Chimola Dana – M237",
+    category: "Mochilas · Urbanas",
+    price: 31000,
+    regular: 50000,
+    image: "https://www.epaccesorios.com.ar/wp-content/uploads/2026/10/M237-BLUE-2-247x247.jpg",
+  },
+  {
+    name: "Totebag Chimola – BP76",
+    category: "Carteras · Tote",
+    price: 24000,
+    regular: 48000,
+    image: "https://www.epaccesorios.com.ar/wp-content/uploads/2026/10/BP76-BLACK-SHINE-2-247x247.jpg",
+  },
+  {
+    name: "Bolso Matero Chimola – BP146",
+    category: "Marroquinería · Materos",
+    price: 29000,
+    regular: 52000,
+    image: "https://www.epaccesorios.com.ar/wp-content/uploads/2026/10/BP146-GRAY-2-247x247.jpg",
+  },
+  {
+    name: "Billetera Chimola Wavy – B263",
+    category: "Marroquinería · Billeteras",
+    price: 12500,
+    regular: 19900,
+    image: "https://www.epaccesorios.com.ar/wp-content/uploads/2026/10/B263-BLACK-1-247x247.jpg",
+  },
+  {
+    name: "Morral Amayra – 67.8700141",
+    category: "Marroquinería · Morrales",
+    price: 12500,
+    regular: 12500,
+    image: "https://www.epaccesorios.com.ar/wp-content/uploads/2026/10/67.8700141-400x400.jpg",
+  },
+];
+
+const money = new Intl.NumberFormat("es-AR", {
+  style: "currency",
+  currency: "ARS",
+  maximumFractionDigits: 0,
+});
 ---
 
-<div class="cat">
+<div class="cat" data-catalog>
   <div class="tiles"></div>
-  <div class="count"><b>1.400</b> productos activos</div>
+  <div class="count"><b>1.402</b> productos activos</div>
 
-  <div class="product">
-    <div class="img"><span class="bag"></span></div>
-    <div class="meta">
-      <span class="lab">Valijas · Cabina</span>
-      <strong>Valija rígida 20"</strong>
-      <span class="price"><s>$189.900</s> $149.900</span>
-      <div class="sw">{swatches.map((c, i) => <i style={`background:${c};--i:${i}`} />)}</div>
+  <div class="product-stage">
+    <div class="pool-label">
+      <span>SELECCIÓN DEL CATÁLOGO</span>
+      <b><i data-current>01</i> / {String(products.length).padStart(2, "0")}</b>
     </div>
+
+    <div class="cards">
+      {products.map((product, index) => (
+        <article class="product-card" data-product data-original-index={index}>
+          <div class="product-image">
+            <img src={product.image} alt="" loading="lazy" decoding="async" />
+            {product.regular > product.price && (
+              <span class="discount">-{Math.round((1 - product.price / product.regular) * 100)}%</span>
+            )}
+          </div>
+          <div class="meta">
+            <span class="lab">{product.category}</span>
+            <strong>{product.name}</strong>
+            <span class="price">
+              {product.regular > product.price && <s>{money.format(product.regular)}</s>}
+              <b>{money.format(product.price)}</b>
+            </span>
+            <span class="stock"><i></i> Stock disponible</span>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    <div class="product-rail" aria-hidden="true">
+      {products.map((product, index) => (
+        <div class="rail-item" data-rail data-original-index={index}>
+          <img src={product.image} alt="" loading="lazy" decoding="async" />
+        </div>
+      ))}
+    </div>
+    <p class="scroll-hint">Scroll para descubrir otro producto <span>↓</span></p>
   </div>
 </div>
 
+<script>
+  document.querySelectorAll<HTMLElement>("[data-catalog]").forEach((catalog) => {
+    const chapter = catalog.closest<HTMLElement>(".chapter");
+    const cards = Array.from(catalog.querySelectorAll<HTMLElement>("[data-product]"));
+    const rail = Array.from(catalog.querySelectorAll<HTMLElement>("[data-rail]"));
+    const current = catalog.querySelector<HTMLElement>("[data-current]");
+    if (!chapter || cards.length === 0) return;
+
+    // Fisher–Yates: una secuencia distinta por visita, pero siempre sobre una pool corta.
+    const order = cards.map((_, index) => index);
+    for (let i = order.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+
+    const update = () => {
+      const step = Number(chapter.dataset.step || 0);
+      const position = Math.min(order.length - 1, Math.max(0, step - 5));
+      const activeIndex = order[position];
+      cards.forEach((card, index) => card.classList.toggle("is-active", index === activeIndex));
+      rail.forEach((item, index) => item.classList.toggle("is-active", index === activeIndex));
+      if (current) current.textContent = String(position + 1).padStart(2, "0");
+    };
+
+    new MutationObserver(update).observe(chapter, { attributes: true, attributeFilter: ["data-step"] });
+    update();
+  });
+</script>
+
 <style>
-  .cat { position: absolute; inset: 0; overflow: hidden; background: #fff; }
-  /* 40 x 35 = 1.400 celdas dibujadas con gradientes, sin 1.400 nodos */
+  .cat { position: absolute; inset: 0; overflow: hidden; background: #fff; color: #0a0a0a; }
+  /* 40 × 35 = 1.400 celdas dibujadas con gradientes, sin 1.400 nodos. */
   .tiles {
     position: absolute;
     inset: 0;
@@ -31,29 +137,44 @@ const swatches = ["#1d1d1f", "#b08d57", "#5e7a8a"];
       linear-gradient(135deg, #e8e8ed, #d2d2d7);
     transform-origin: 56% 47%;
     transform: scale(calc(1 + pow(clamp(0, var(--p) * 1.6, 1), 3) * 40));
-    opacity: calc(1 - clamp(0, (var(--p) - 0.5) * 6, 1));
+    opacity: calc(1 - clamp(0, (var(--p) - 0.48) * 7, 1));
   }
-  .count { position: absolute; left: 1.4em; top: 1.2em; padding: 0.5em 0.9em; border-radius: 99px; background: #0a0a0a; color: #fff; font-size: 0.75em; opacity: calc(1 - clamp(0, (var(--p) - 0.25) * 8, 1)); }
-  .count b { font-weight: 600; }
+  .count { position: absolute; left: 1.4em; top: 1.2em; z-index: 2; padding: 0.5em 0.9em; border-radius: 99px; background: #0a0a0a; color: #fff; font-size: 0.75em; opacity: calc(1 - clamp(0, (var(--p) - 0.25) * 8, 1)); }
+  .count b { font-weight: 650; }
 
-  .product { position: absolute; inset: 0; display: grid; grid-template-columns: 1.1fr 1fr; align-items: center; gap: 1.6em; padding: 2em; opacity: clamp(0, (var(--p) - 0.5) * 6, 1); transform: scale(calc(0.94 + clamp(0, (var(--p) - 0.5) * 6, 1) * 0.06)); }
-  .img { aspect-ratio: 1; border-radius: 1em; background: var(--color-soft); display: grid; place-items: center; }
-  .bag { width: 46%; height: 64%; border-radius: 0.8em; background: var(--c, #1d1d1f); box-shadow: inset -0.6em 0 0 rgba(255, 255, 255, 0.06), 0 1.6em 2em -1.2em rgba(0, 0, 0, 0.4); position: relative; transition: background 0.5s; }
-  .bag::before { content: ""; position: absolute; left: 30%; right: 30%; top: -14%; height: 14%; border: 0.3em solid #3a3a3c; border-bottom: 0; border-radius: 0.4em 0.4em 0 0; }
-  .meta { display: flex; flex-direction: column; gap: 0.5em; }
-  .lab { font: 0.6em var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-mute); }
-  .meta strong { font-size: 1.3em; letter-spacing: -0.02em; }
-  .price { font-size: 0.85em; }
-  .price s { color: var(--color-faint); margin-right: 0.4em; }
-  .sw { display: flex; gap: 0.5em; margin-top: 0.4em; }
-  .sw i { width: 1.4em; height: 1.4em; border-radius: 50%; box-shadow: 0 0 0 2px #fff, 0 0 0 3px transparent; transition: box-shadow 0.3s; }
+  .product-stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 0.8em; padding: 1.35em; opacity: clamp(0, (var(--p) - 0.46) * 7, 1); transform: translateY(calc((1 - clamp(0, (var(--p) - 0.46) * 7, 1)) * 1.2em)); }
+  .pool-label { display: flex; align-items: center; justify-content: space-between; gap: 1em; color: #86868b; font: 600 0.48em/1 var(--font-mono); letter-spacing: 0.1em; }
+  .pool-label b { color: #0a0a0a; }
+  .pool-label i { color: #ff4f17; font-style: normal; }
+  .cards { position: relative; min-height: 0; }
+  .product-card { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr); align-items: center; gap: 1.35em; visibility: hidden; opacity: 0; transform: translateY(0.8em) scale(0.98); transition: opacity 320ms ease, transform 420ms cubic-bezier(.22,.8,.26,1), visibility 320ms; }
+  .product-card.is-active { visibility: visible; opacity: 1; transform: none; }
+  .product-image { position: relative; min-height: 0; height: 100%; max-height: 18em; display: grid; place-items: center; overflow: hidden; border-radius: 1em; background: #f1f1f3; }
+  .product-image img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+  .discount { position: absolute; left: 0.75em; top: 0.75em; padding: 0.4em 0.58em; border-radius: 0.45em; background: #ff4f17; color: #fff; font: 700 0.5em/1 var(--font-mono); }
+  .meta { display: flex; flex-direction: column; gap: 0.55em; min-width: 0; }
+  .lab { color: #86868b; font: 0.5em/1.3 var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; }
+  .meta strong { font: 650 1.16em/1.04 var(--font-sans); letter-spacing: -0.035em; text-wrap: balance; }
+  .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4em; font: 0.72em/1 var(--font-sans); }
+  .price s { color: #a1a1a6; font-size: 0.78em; }
+  .price b { color: #ff4f17; font-weight: 700; }
+  .stock { display: flex; align-items: center; gap: 0.42em; color: #636366; font: 0.48em/1 var(--font-mono); }
+  .stock i { width: 0.58em; height: 0.58em; border-radius: 50%; background: #30b85a; box-shadow: 0 0 0 0.25em #30b85a1f; }
 
-  /* la variante activa cambia con los pasos finales del scroll */
-  :global([data-step="7"]) .bag { --c: #1d1d1f; }
-  :global([data-step="8"]) .bag { --c: #b08d57; }
-  :global([data-step="9"]) .bag, :global([data-step="10"]) .bag { --c: #5e7a8a; }
-  :global([data-step="7"]) .sw i:nth-child(1),
-  :global([data-step="8"]) .sw i:nth-child(2),
-  :global([data-step="9"]) .sw i:nth-child(3),
-  :global([data-step="10"]) .sw i:nth-child(3) { box-shadow: 0 0 0 2px #fff, 0 0 0 3px #0a0a0a; }
+  .product-rail { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.38em; }
+  .rail-item { aspect-ratio: 1.28; overflow: hidden; border: 1px solid #e2e2e6; border-radius: 0.42em; background: #f5f5f7; opacity: 0.52; transition: opacity 220ms, border-color 220ms, transform 220ms; }
+  .rail-item img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+  .rail-item.is-active { opacity: 1; border-color: #ff4f17; transform: translateY(-0.14em); }
+  .scroll-hint { margin: 0; color: #86868b; font: 0.42em/1 var(--font-mono); text-align: center; }
+  .scroll-hint span { color: #ff4f17; }
+
+  @media (max-width: 34rem) {
+    .product-stage { padding: 1em; }
+    .product-card { grid-template-columns: 1fr; gap: 0.65em; }
+    .product-image { max-height: 11em; }
+    .meta { gap: 0.32em; }
+    .meta strong { font-size: 0.88em; }
+    .product-rail { gap: 0.22em; }
+    .scroll-hint { display: none; }
+  }
 </style>
