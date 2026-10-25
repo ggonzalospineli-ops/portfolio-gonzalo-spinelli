@@ -59,7 +59,10 @@ export const projects: Project[] = [
       "Controladores integrados en el kernel; todo documentado en una bitácora de ingeniería.",
     ],
     tags: ["C", "Kernel Linux", "Android", "TrustZone / Knox"],
-    links: [],
+    links: [
+      { href: "https://ggonzalospineli-ops.github.io/on7-nethunter-field-manual/", label: "Ver manual de campo" },
+      { href: "https://github.com/ggonzalospineli-ops/on7-nethunter-field-manual", label: "Código" },
+    ],
     dark: true,
   },
   {
