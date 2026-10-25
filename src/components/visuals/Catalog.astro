@@ -60,7 +60,7 @@ const mosaic = bolsaMosaic;
 <div class="cat" data-catalog>
   <div class="tiles" aria-hidden="true">
     {mosaic.map((product, index) => (
-      <span class="tile" style={`--tile:${index % 6}`}>
+      <span class="tile" data-tile style={`--tile:${index % 6}`}>
         <img src={product.image} alt="" loading="eager" decoding="async" />
       </span>
     ))}
@@ -109,12 +109,21 @@ const mosaic = bolsaMosaic;
 <script>
   document.querySelectorAll<HTMLElement>("[data-catalog]").forEach((catalog) => {
     const chapter = catalog.closest<HTMLElement>(".chapter");
+    const tiles = catalog.querySelector<HTMLElement>(".tiles");
+    const mosaicTiles = Array.from(catalog.querySelectorAll<HTMLElement>("[data-tile]"));
     const cards = Array.from(catalog.querySelectorAll<HTMLElement>("[data-product]"));
     const rail = Array.from(catalog.querySelectorAll<HTMLElement>("[data-rail]"));
     const current = catalog.querySelector<HTMLElement>("[data-current]");
     if (!chapter || cards.length === 0) return;
 
-    // Fisher–Yates: una secuencia distinta por visita, pero siempre sobre una pool corta.
+    // Fisher–Yates: distribuye las 108 fotos de forma distinta en cada visita.
+    for (let i = mosaicTiles.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [mosaicTiles[i], mosaicTiles[j]] = [mosaicTiles[j], mosaicTiles[i]];
+    }
+    mosaicTiles.forEach((tile) => tiles?.appendChild(tile));
+
+    // La secuencia de los seis productos destacados también cambia por visita.
     const order = cards.map((_, index) => index);
     for (let i = order.length - 1; i > 0; i -= 1) {
       const j = Math.floor(Math.random() * (i + 1));
