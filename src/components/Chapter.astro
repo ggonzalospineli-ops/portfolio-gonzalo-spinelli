@@ -42,8 +42,10 @@ const n = String(i + 1).padStart(2, "0");
         <p class="lede mt-6 max-w-xl" data-reveal style="--d:.1s">{p.desc}</p>
       </div>
 
-      <div class="visual-frame" aria-hidden={p.visual === "kernel" ? undefined : "true"}>
-        <div class="visual-root"><Visual p={p} /></div>
+      <div class="pin-track">
+        <div class="visual-frame" aria-hidden={p.visual === "kernel" ? undefined : "true"}>
+          <div class="visual-root"><Visual p={p} /></div>
+        </div>
       </div>
 
       <div class="rest copy-block">
@@ -97,6 +99,8 @@ const n = String(i + 1).padStart(2, "0");
   }
   /* los visuales usan em: escalan con el ancho del marco (piso más alto para que en celular no queden diminutos) */
   .visual-root { position: absolute; inset: 0; font-size: clamp(16px, 2.6cqw, 22px); }
+  /* contenedor del visual: en escritorio es transparente (el visual es celda de la grilla); en celular da la altura para fijarlo */
+  .pin-track { position: relative; }
 
   /* escritorio apaisado: texto a la izquierda (intro arriba, resto abajo) y visual a la derecha, centrado */
   @media (min-width: 64rem) and (orientation: landscape) {
@@ -107,6 +111,7 @@ const n = String(i + 1).padStart(2, "0");
       row-gap: 2rem;
       align-content: center;
     }
+    .pin-track { display: contents; }
     .lead { grid-area: lead; align-self: end; }
     .rest { grid-area: rest; align-self: start; }
     .visual-frame { grid-area: visual; align-self: center; }
@@ -132,5 +137,10 @@ const n = String(i + 1).padStart(2, "0");
     .rest ul li { padding-block: 0.4rem; }
     .rest > .mt-7 { margin-top: 0.9rem; }
     .rest > div:last-child { margin-top: 0.9rem; }
+  }
+  /* SOLO teléfonos: el visual queda fijo y se anima con el scroll (como en escritorio, pero apilado) */
+  @media (max-width: 47.9375rem) {
+    .pin-track { height: 140vh; }
+    .visual-frame { position: sticky; top: 16vh; aspect-ratio: 1 / 1; }
   }
 </style>
