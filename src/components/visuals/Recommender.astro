@@ -65,4 +65,15 @@ const results = [
     opacity: clamp(0, (var(--p) - var(--a)) * 10, 1); transform: translateY(calc((1 - clamp(0, (var(--p) - var(--a)) * 10, 1)) * 0.8em)); }
   .rank li span { font-family: var(--font-mono); color: var(--color-faint); }
   .rank li b { margin-left: auto; font-family: var(--font-mono); color: var(--color-signal); }
+
+  /* celular: el campo de puntos va arriba a todo el ancho (si no queda diminuto), con sliders + contador debajo */
+  @media (max-width: 35rem) {
+    .rc { grid-template-columns: 1fr; grid-template-rows: auto auto; gap: 1em; padding: 1.1em; align-content: center; }
+    .field { grid-column: 1; align-self: center; gap: 0.3em; }
+    .side { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0.8em 1.2em; font-size: 0.72em; }
+    .side .sl { flex: 1 1 44%; }
+    .counter { flex: 1 1 100%; margin-top: 0.1em; }
+    .counter .big { font-size: 2.2em; }
+    .rank { display: none; }
+  }
 </style>

@@ -262,10 +262,10 @@ const log: [string, string][] = [
   .retry-audit { margin-top: 0.25em; background: #252527; }
 
   @media (max-width: 35rem) {
-    .kn { grid-template-columns: 1fr; padding: 1em; }
-    .term { display: none; }
-    .audit-card { max-width: 22em; margin: auto; }
-    .audit-panel { inset: 0.45em; }
+    /* en celular se prefiere la terminal (que anima sus líneas con el scroll) antes que el cartel de auditoría */
+    .kn { grid-template-columns: 1fr; padding: 1.1em; place-items: center; }
+    .audit-card, .audit-panel { display: none; }
+    .term { align-self: center; width: 100%; font-size: 0.66em; }
   }
 
   @keyframes glitch { 0% { transform: translate(2px, -1px); } 100% { transform: translate(-2px, 1px); } }
