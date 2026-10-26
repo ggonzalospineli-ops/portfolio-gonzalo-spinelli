@@ -32,18 +32,24 @@ const n = String(i + 1).padStart(2, "0");
   class={`chapter relative ${p.dark ? "is-dark" : ""}`}
 >
   <div class="stage">
-    <div class="wrap grid h-full items-center gap-10 lg:landscape:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:landscape:gap-16">
-      <div class="copy">
+    <div class="wrap grid h-full items-center gap-10">
+      <div class="lead copy-block">
         <div class="label flex flex-wrap items-center gap-x-3 gap-y-1" data-reveal>
           <span class="!text-signal">{n} / {String(total).padStart(2, "0")}</span>
           <span>{p.discipline}</span>
         </div>
         <h3 class="headline mt-5 !text-[clamp(2rem,3.6vw,3.6rem)]" data-reveal style="--d:.05s">{p.headline}</h3>
         <p class="lede mt-6 max-w-xl" data-reveal style="--d:.1s">{p.desc}</p>
+      </div>
 
+      <div class="visual-frame" aria-hidden={p.visual === "kernel" ? undefined : "true"}>
+        <div class="visual-root"><Visual p={p} /></div>
+      </div>
+
+      <div class="rest copy-block">
         {
           p.highlights && (
-            <ul class="mt-8 max-w-xl divide-y divide-rule border-y border-rule" data-reveal style="--d:.15s">
+            <ul class="max-w-xl divide-y divide-rule border-y border-rule" data-reveal style="--d:.15s">
               {p.highlights.map((h, j) => (
                 <li class="flex gap-4 py-3 text-[0.95rem] leading-snug">
                   <span class="font-mono text-xs text-faint">{String(j + 1).padStart(2, "0")}</span>
@@ -70,16 +76,16 @@ const n = String(i + 1).padStart(2, "0");
           )
         }
       </div>
-
-      <div class="visual-frame" aria-hidden={p.visual === "kernel" ? undefined : "true"}>
-        <div class="visual-root"><Visual p={p} /></div>
-      </div>
     </div>
   </div>
 </section>
 
 <style>
-  .chapter { padding-block: 6rem; }
+  /* en celular menos aire entre capítulos (antes quedaba mucho blanco) */
+  .chapter { padding-block: 3.5rem; }
+  .copy-block { min-width: 0; }
+  /* el primer elemento de "rest" no suma margen propio: el espaciado lo da el gap de la grilla */
+  .rest > :first-child { margin-top: 0; }
   .visual-frame {
     position: relative;
     width: 100%;
@@ -92,25 +98,39 @@ const n = String(i + 1).padStart(2, "0");
   /* los visuales usan em: escalan con el ancho del marco (piso más alto para que en celular no queden diminutos) */
   .visual-root { position: absolute; inset: 0; font-size: clamp(16px, 2.6cqw, 22px); }
 
+  /* escritorio apaisado: texto a la izquierda (intro arriba, resto abajo) y visual a la derecha, centrado */
+  @media (min-width: 64rem) and (orientation: landscape) {
+    .wrap {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      grid-template-areas: "lead visual" "rest visual";
+      column-gap: 4rem;
+      row-gap: 2rem;
+      align-content: center;
+    }
+    .lead { grid-area: lead; align-self: end; }
+    .rest { grid-area: rest; align-self: start; }
+    .visual-frame { grid-area: visual; align-self: center; }
+  }
+
   /* pantallas con lugar: el capítulo dura 3 pantallas y el escenario queda fijo */
   @media (min-width: 64rem) and (min-height: 40rem), (min-width: 48rem) and (min-height: 60rem) {
     .chapter { height: 300vh; padding: 0; }
     .stage { position: sticky; top: 0; height: 100svh; padding-top: 4rem; }
     .visual-frame { max-height: calc(100svh - 9rem); }
   }
-  /* tablet vertical: copy arriba, visual abajo y más ancho */
+  /* tablet vertical: intro → visual → resto apilados y visual más ancho */
   @media (orientation: portrait) and (min-width: 48rem) and (min-height: 60rem) {
     .stage .wrap { align-content: center; }
     .visual-frame { aspect-ratio: 16 / 10; }
   }
-  /* viewports bajos (muchas laptops): compactar el copy para que no desborde el escenario fijo y pise el próximo capítulo */
-  @media (min-width: 48rem) and (max-height: 50rem) {
+  /* viewports bajos (muchas laptops): compactar el texto para que no desborde el escenario fijo y pise el próximo capítulo */
+  @media (min-width: 64rem) and (orientation: landscape) and (max-height: 50rem) {
     .stage { padding-top: 3rem; }
-    .copy .headline { margin-top: 0.5rem; font-size: clamp(1.4rem, 2.8vw, 2.3rem) !important; }
-    .copy .lede { margin-top: 0.6rem; font-size: clamp(0.95rem, 1.1vw, 1.05rem) !important; }
-    .copy ul { margin-top: 0.9rem; }
-    .copy ul li { padding-block: 0.4rem; }
-    .copy ul + div { margin-top: 0.9rem; }
-    .copy > div:last-child { margin-top: 0.9rem; }
+    .wrap { row-gap: 1.1rem; }
+    .lead .headline { margin-top: 0.5rem; font-size: clamp(1.4rem, 2.8vw, 2.3rem) !important; }
+    .lead .lede { margin-top: 0.6rem; font-size: clamp(0.95rem, 1.1vw, 1.05rem) !important; }
+    .rest ul li { padding-block: 0.4rem; }
+    .rest > .mt-7 { margin-top: 0.9rem; }
+    .rest > div:last-child { margin-top: 0.9rem; }
   }
 </style>
