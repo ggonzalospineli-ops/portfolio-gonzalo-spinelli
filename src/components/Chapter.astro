@@ -89,8 +89,8 @@ const n = String(i + 1).padStart(2, "0");
     background: var(--color-soft);
     container-type: inline-size;
   }
-  /* los visuales usan em: escalan con el ancho del marco */
-  .visual-root { position: absolute; inset: 0; font-size: clamp(13px, 2.6cqw, 22px); }
+  /* los visuales usan em: escalan con el ancho del marco (piso más alto para que en celular no queden diminutos) */
+  .visual-root { position: absolute; inset: 0; font-size: clamp(16px, 2.6cqw, 22px); }
 
   /* pantallas con lugar: el capítulo dura 3 pantallas y el escenario queda fijo */
   @media (min-width: 64rem) and (min-height: 40rem), (min-width: 48rem) and (min-height: 60rem) {
@@ -102,5 +102,15 @@ const n = String(i + 1).padStart(2, "0");
   @media (orientation: portrait) and (min-width: 48rem) and (min-height: 60rem) {
     .stage .wrap { align-content: center; }
     .visual-frame { aspect-ratio: 16 / 10; }
+  }
+  /* viewports bajos (muchas laptops): compactar el copy para que no desborde el escenario fijo y pise el próximo capítulo */
+  @media (min-width: 48rem) and (max-height: 50rem) {
+    .stage { padding-top: 3rem; }
+    .copy .headline { margin-top: 0.5rem; font-size: clamp(1.4rem, 2.8vw, 2.3rem) !important; }
+    .copy .lede { margin-top: 0.6rem; font-size: clamp(0.95rem, 1.1vw, 1.05rem) !important; }
+    .copy ul { margin-top: 0.9rem; }
+    .copy ul li { padding-block: 0.4rem; }
+    .copy ul + div { margin-top: 0.9rem; }
+    .copy > div:last-child { margin-top: 0.9rem; }
   }
 </style>

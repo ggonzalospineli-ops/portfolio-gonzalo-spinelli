@@ -28,8 +28,18 @@ $$<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
     e.preventDefault();
     const y = target.getBoundingClientRect().top + scrollY;
     lenis ? lenis.scrollTo(y, { duration: 1.6 }) : scrollTo({ top: y, behavior: "smooth" });
+    // dejar una entrada en el historial: así "Atrás" vuelve a la sección anterior en vez de salir del sitio
+    if (id !== location.hash) history.pushState(null, "", id);
     if (id === "#main") target.focus({ preventScroll: true });
   });
+});
+
+// Atrás/Adelante del navegador: llevar al ancla del historial en vez de abandonar la página
+addEventListener("popstate", () => {
+  const id = location.hash;
+  const target = id ? document.querySelector<HTMLElement>(id) : null;
+  const y = target ? target.getBoundingClientRect().top + scrollY : 0;
+  lenis ? lenis.scrollTo(y, { duration: 0.8 }) : scrollTo({ top: y });
 });
 
 /* ---------- apariciones ---------- */
